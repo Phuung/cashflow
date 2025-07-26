@@ -58,6 +58,7 @@
         <h2>ID phòng: <span class="roomIdDisplay"></span></h2>
         <h3>Lượt của: <span id="currentTurn"></span></h3>
         <button id="rollBtn" onclick="rollDice()" disabled>Tung xúc xắc</button>
+
         <button id="bank-btn" onclick="showBank()">Bank</button>
         <div id="bank-box" style="display:none;">
             <button id="close-bank-btn">Close</button><br><br>
@@ -66,6 +67,13 @@
             <p id="max-deposit">Tối đa: 0</p>
             <button id="loan-btn">Vay tiền</button>
             <p id="max-loan">Tối đa: 0</p>
+        </div>
+
+        <button id="report-btn" onclick="showReport()">Báo cáo tài chính</button>
+        <div id="report-box" style="display:none;">
+            <button id="close-report-btn">Đóng</button>
+            <h3>Báo cáo của <span id="player-name"></span></h3>
+            <div id="report-content"></div>
         </div>
         <div id="score-list"></div>
     </div>

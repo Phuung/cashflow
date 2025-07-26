@@ -3,7 +3,6 @@ class Player {
         this.id = id;
         this.name = name;
         this.profession = '',
-        this.score = 0;
         this.pos = -1;
         this.salary = 0;
         this.income = {};

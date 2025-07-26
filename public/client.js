@@ -7,13 +7,39 @@ let roomOwner = false;
 let hasRolled = true;
 let receivedResult = false;
 let timeOut;
-
+let showingReport = false;
+//TODO: đồng bộ dữ liệu
 professionList = [];
 playerList = [];
 myInfo = {
     id: '',
     name: '',
     profession: '',
+    pos: -1,
+    salary: 0,
+    income: {},
+    totalIncome: 0,
+    expenses: {
+        taxes: 0,
+        homeMortgagePayment: 0,
+        schoolLoanPayment: 0,
+        carLoanPayment: 0,
+        creditCardPayment: 0,
+        retailPayment: 0,
+        otherExpenses: 0,
+        childExpense: 0
+    },
+    totalExpenses: 0,
+    savings: 0,
+    assets: {},
+    liabilities: {
+        homeMortgage: 0,
+        schoolsLoans: 0,
+        carLoans: 0,
+        creditCards: 0,
+        retailDebt: 0
+    },
+    children: 0,
     charity: 0,
     downszized: 0
 }
@@ -155,6 +181,32 @@ function showBank() {
     };
 }
 
+function showReport() {
+    document.getElementById('report-box').style.display = 'block';
+    document.getElementById('close-report-btn').onclick = () => {
+        document.getElementById('report-box').style.display = 'none';
+        showingReport = false;
+    };
+    document.getElementById('player-name').innerText = myInfo.name;
+    content = [];
+    content.push(`<strong>Vị trí:</strong> ${myInfo.pos}`);
+    content.push(`<strong>Nghề nghiệp:</strong> ${myInfo.profession || 'Chưa chọn'}`);
+    content.push(`<strong>Lương:</strong> ${myInfo.salary}`);
+    content.push(`<strong>Tiết kiệm:</strong> ${myInfo.savings}`);
+    content.push(`<strong>Tài sản:</strong> ${Object.keys(myInfo.assets).length > 0 ? Object.keys(myInfo.assets).join('<br>') : 'Không có'}`);
+    content.push(`<strong>Nợ:</strong> ${Object.keys(myInfo.liabilities).length > 0 ? Object.keys(myInfo.liabilities).map(key => `${key}: ${myInfo.liabilities[key]}`).join('<br>') : 'Không có'}`);
+    content.push(`<strong>Thu nhập:</strong> ${Object.keys(myInfo.income).length > 0 ? Object.keys(myInfo.income).map(key => `${key}: ${myInfo.income[key]}`).join('<br>') : 'Không có'}`);
+    content.push(`<strong>Chi tiêu:</strong> ${Object.keys(myInfo.expenses).length > 0 ? Object.keys(myInfo.expenses).map(key => `${key}: ${myInfo.expenses[key]}`).join('<br>') : 'Không có'}`);
+    content.push(`<strong>Tổng thu nhập:</strong> ${myInfo.totalIncome}`);
+    content.push(`<strong>Tổng chi tiêu:</strong> ${myInfo.totalExpenses}`);
+    content.push(`<strong>Trẻ em:</strong> ${myInfo.children}`);
+    content.push(`<strong>Quyên góp:</strong> ${myInfo.charity}`);
+    content.push(`<strong>Thất nghiệp:</strong> ${myInfo.downsized}`);
+    document.getElementById('report-content').innerHTML = content.join('<br>');
+    //cập nhật
+    showingReport = true;
+}
+
 socket.on('connect', () => {
     myInfo.id = socket.id;
     myId = myInfo.id;
@@ -222,8 +274,7 @@ socket.on('playerList', (players) => {
             container.innerHTML = html;
         }
     });
-    console.log(html);
-    
+    //console.log('player list', players);
 });
 
 socket.on('gameStarted', (players) => {
@@ -236,16 +287,19 @@ socket.on('gameStarted', (players) => {
         socket.emit('changeProf', currentRoomId, myInfo.id, randomProf);
         notification(`Bạn đã được chọn dùm nghề ${randomProf}`);
     }
-    //TODO: nếu người chơi chưa chọn nghề sẽ không được cập nhật?
 });
 
 socket.on('updatePlayerList', (players) => {
-    console.log('mang:', Array.isArray(players)); // true nếu đúng là mảng
     const html = 'Danh sách người chơi: </br>' + players.map(p =>
         `<div>${p.name} - <strong>Vị trí: ${p.pos}</strong></div>`
     ).join('');
     console.log(html);
     document.getElementById('score-list').innerHTML = html;
+    playerList = players;
+    myInfo = players.find(p => p.id === myInfo.id) || myInfo;
+    if (showingReport) {
+        showReport();
+    }
 });
 
 socket.on('nextTurn', ({playerId, name }) => {

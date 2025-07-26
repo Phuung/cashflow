@@ -68,6 +68,7 @@ const spaceType = {
         //tăng số con của người chơi lên 1 (tối đa 3) và cập nhật chi phí nuôi con
         player.children += 1;
         if (player.children > 3) player.children = 3;
+        console.log('baby');
         reCalcExpenses(player);
     },
     7 : (room, player) =>{
@@ -80,6 +81,23 @@ const ratRace = [2,3,4,2,5,1,6,2,3,2,4,1,2,3,6,5,2,1];
 const fastTrack = [];
 //test
 const raceLength = ratRace.length;
+
+//functions
+//TODO: cần kiểm tra lại xem 3 hàm dưới tính đúng chưa
+function reCalcIncome(player) {
+    player.totalIncome = Object.values(player.income).reduce((acc, val) => acc + val, player.salary);
+}
+
+function reCalcExpenses(player) {
+    //chi phí nuôi 1 đứa trẻ cố định là 200
+    player.expenses.childExpense = player.children * 200;
+    player.totalExpenses = Object.values(player.expenses).reduce((acc, val) => acc + val, 0);
+}
+
+function reCalcCashFlow(player) {
+    reCalcIncome(player);
+    reCalcExpenses(player);
+}
 //run
 io.on('connection', socket => {
     console.log(`Socket ket noi: ${socket.id}`);
@@ -173,6 +191,10 @@ io.on('connection', socket => {
         //console.log(currentPlayer);
         reCalcCashFlow(currentPlayer);
         io.to(roomId).emit('playerList', rooms[roomId].players);
+        if (room.started) {
+            //nếu đã bắt đầu game thì cập nhật lại danh sách người chơi
+            io.to(roomId).emit('updatePlayerList', room.players);
+        }
     });
 
     socket.on('startGame', roomId => {
@@ -316,7 +338,7 @@ io.on('connection', socket => {
 
     function updatePlayerList(roomId) {
         const room = rooms[roomId];
-        io.to(roomId).emit('updatePlayerList', getPlayerData(room));
+        io.to(roomId).emit('updatePlayerList', room.players);
     }
 
     function getPlayerData(room) {
@@ -325,22 +347,6 @@ io.on('connection', socket => {
             name: p.name,
             pos: p.pos
         }));
-    }
-
-    //TODO: cần kiểm tra lại xem 3 hàm dưới tính đúng chưa
-    function reCalcIncome(player) {
-        player.totalIncome = Object.values(player.income).reduce((acc, val) => acc + val, player.salary);
-    }
-
-    function reCalcExpenses(player) {
-        //chi phí nuôi 1 đứa trẻ cố định là 200
-        player.expenses.childExpense = player.children * 200;
-        player.totalExpenses = Object.values(player.expenses).reduce((acc, val) => acc + val, 0);
-    }
-
-    function reCalcCashFlow(player) {
-        reCalcIncome(player);
-        reCalcExpenses(player);
     }
 
     function payday(player) {
