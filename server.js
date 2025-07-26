@@ -1,4 +1,3 @@
-//TODO: nên dùng githud không nhỉ?
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -180,7 +179,7 @@ io.on('connection', socket => {
         if (rooms[roomId]) {
             console.log('game started');
             rooms[roomId].started = true;
-            io.to(roomId).emit('gameStarted');
+            io.to(roomId).emit('gameStarted', rooms[roomId].players);
             emitNextTurn(rooms[roomId]);
             updatePlayerList(roomId);
         }
@@ -213,9 +212,9 @@ io.on('connection', socket => {
 
         currentPlayer.pos = (dice + currentPlayer.pos) % raceLength;
         //payday
-        let checkking = currentPlayer.pos;
+        let checking = currentPlayer.pos;
         for (let i = 0; i < dice; i++) {
-            if (ratRace[checkking] === 1) {
+            if (ratRace[checking] === 1) {
                 payday(currentPlayer);
             }
             checking -= 1;
@@ -224,7 +223,7 @@ io.on('connection', socket => {
             }
         }
 
-        spaceType[ratRace[currentPlayer.pos]]();
+        spaceType[ratRace[currentPlayer.pos]](room, currentPlayer);
         io.to(roomId).emit('diceResult', {
             playerId: currentPlayer.id,
             name: currentPlayer.name,
@@ -244,10 +243,33 @@ io.on('connection', socket => {
         nextTurn(room);
     });
     //TODO: vay ngân hàng, nếu vay âm là gửi
-    socket.on('loanRequest', () => {
+    socket.on('bankAction', (playerId, roomId, value) => {
         //kiểm tra khả năng vay
+        const room = rooms[roomId];
+        if (!room) {
+            console.log('Khong tim thay phong');
+            return;
+        }
+        const player = room.players.find(p => p.id === playerId);
+        if (!player) {
+            console.log('Khong tim thay nguoi choi');
+            return;
+        }
+        if (value < 0 && player.savings < value) {
+            socket.emit('errorMsg', 'Không thể gửi quá số tiền hiện có!');
+            return;
+        } else if (value > 0 && (player.totalIncome - player.totalExpenses) < Math.abs(value)) {
+            socket.emit('errorMsg', 'Không đủ khả năng vay ngân hàng!');
+            return;
+        }
         //trừ/cộng trực tiếp vào nợ ngân hàng
+        player.liabilities.retailDebt += value;
+        //cập nhật tiền tiết kiệm
+        player.savings += value;
+        reCalcCashFlow(player);
+        updatePlayerList(roomId);
         //trả vể thông báo
+        socket.emit('notification', `Đã ${value > 0 ? 'vay' : 'gửi'} ngân hàng số tiền ${value}!`);
     }) 
 
 

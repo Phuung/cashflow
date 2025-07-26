@@ -44,7 +44,8 @@
             <div>Code: </br> <strong>Phương</strong></div>
             <div>Giao diện: </br> <strong>Phương</strong></div>
             <div>Âm thanh: </br> <strong>Lụm trên internet</strong></div>
-            <div>Trợ lý, hỗ trợ, tư vấn: </br> <strong>Chat GPT</strong></div>
+            <div>Tư vấn: </br> <strong>Chat GPT</strong></div>
+            <div>Trợ lý: </br> <strong>Copilot</strong></div>
         </div>
     </div>
     <div id="waiting-room" class="slide">
@@ -57,6 +58,15 @@
         <h2>ID phòng: <span class="roomIdDisplay"></span></h2>
         <h3>Lượt của: <span id="currentTurn"></span></h3>
         <button id="rollBtn" onclick="rollDice()" disabled>Tung xúc xắc</button>
+        <button id="bank-btn" onclick="showBank()">Bank</button>
+        <div id="bank-box" style="display:none;">
+            <button id="close-bank-btn">Close</button><br><br>
+            <input type="number" id="amount-input" placeholder="Nhập số tiền"><br><br>
+            <button id="deposit-btn">Gửi tiền</button>
+            <p id="max-deposit">Tối đa: 0</p>
+            <button id="loan-btn">Vay tiền</button>
+            <p id="max-loan">Tối đa: 0</p>
+        </div>
         <div id="score-list"></div>
     </div>
     

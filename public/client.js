@@ -9,6 +9,7 @@ let receivedResult = false;
 let timeOut;
 
 professionList = [];
+playerList = [];
 myInfo = {
     id: '',
     name: '',
@@ -118,6 +119,42 @@ function rollDice() {
     clearTimeout(timeOut);
 }
 
+function showBank() {
+    const bankBox = document.getElementById('bank-box');
+    const amountInput = document.getElementById('amount-input');
+    const maxDeposit = document.getElementById('max-deposit');
+    const maxLoan = document.getElementById('max-loan');
+    amountInput.value = '';
+    maxDeposit.textContent = `Tối đa: ${myInfo.savings}`;
+    maxLoan.textContent = `Tối đa: ${(myInfo.totalIncome - myInfo.totalExpenses)}`;
+    bankBox.style.display = 'block';
+    document.getElementById('close-bank-btn').onclick = () => {
+      bankBox.style.display = 'none';
+    };
+    //quy ước dương là số tiền vay, âm là gửi
+    //Lãi suất gửi ngân hàng
+    const bankInterestRate = 0.05; // 5%
+    document.getElementById('deposit-btn').onclick = () => {
+        const value = parseInt(amountInput.value);
+        if (!value || value <= 0 || value > myInfo.savings) {
+            notification('Không thể gửi số tiền này!');
+            return;
+        }
+        socket.emit('bankAction', myInfo.id, currentRoomId, -value);
+        bankBox.style.display = 'none';
+    };
+
+    document.getElementById('loan-btn').onclick = () => {
+        const value = parseInt(amountInput.value);
+        if (!value || value <= 0 || value > (myInfo.totalIncome - myInfo.totalExpenses)) {
+            alert('Không thể vay số tiền này!');
+            return;
+        }
+        socket.emit('bankAction', myInfo.id, currentRoomId, value);
+        bankBox.style.display = 'none';
+    };
+}
+
 socket.on('connect', () => {
     myInfo.id = socket.id;
     myId = myInfo.id;
@@ -189,7 +226,7 @@ socket.on('playerList', (players) => {
     
 });
 
-socket.on('gameStarted', () => {
+socket.on('gameStarted', (players) => {
     notification('Game đã bắt đầu!');
     document.getElementsByClassName('roomIdDisplay')[1].innerText = currentRoomId;
     document.getElementById('waiting-room').style.display = 'none';
@@ -199,6 +236,7 @@ socket.on('gameStarted', () => {
         socket.emit('changeProf', currentRoomId, myInfo.id, randomProf);
         notification(`Bạn đã được chọn dùm nghề ${randomProf}`);
     }
+    //TODO: nếu người chơi chưa chọn nghề sẽ không được cập nhật?
 });
 
 socket.on('updatePlayerList', (players) => {
@@ -255,6 +293,9 @@ socket.on('cardChoice', ({ option }) => {
         choice: choice ? 0 : 1
     });
 })
+socket.on('notification', (message) => {
+    notification("Máy chủ: " + message);
+});
 
 socket.on('errorMsg', msg => {
     alert(msg);
