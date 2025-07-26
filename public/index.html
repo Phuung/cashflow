@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <title>Demo</title>
+    <style>
+        * { margin-top: 20px; }
+        body { font-family: sans-serif; padding: 20px; }
+        .slide { display: none; }
+        #nameInput { display: block; }
+        #about {
+            position: fixed;
+            width: 80vw;
+            height: 80vh;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: darkkhaki;
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cash Flow demo</h1>
+
+    <div id="nameInput" class="slide">
+        <input type="text" id="playerName" placeholder="Nhập tên của bạn" />
+        <button onclick="setName()">Vào sảnh</button>
+    </div>
+
+    <div id="lobby" class="slide">
+        <h2>Xin chào, <span id="displayName"></span></h2>
+        <button onclick="createRoom()">Tạo phòng</button>
+        <button onclick="showJoin()">Chọn phòng</button>
+        <div id="joinRoom" style="margin-top:10px; display:none;">
+        <input type="text" id="roomIdInput" placeholder="Nhập ID phòng" />
+        <button onclick="joinRoom()">Vào phòng</button>
+        </div>
+        <button id="showAbout" onclick="showAbout()">About</button>
+        <div id="about">
+            <button onclick="hideAbout()">Hide</button>
+            <div>Đạo diễn: </br> <strong>Phương</strong></div>
+            <div>Code: </br> <strong>Phương</strong></div>
+            <div>Giao diện: </br> <strong>Phương</strong></div>
+            <div>Âm thanh: </br> <strong>Lụm trên internet</strong></div>
+            <div>Trợ lý, hỗ trợ, tư vấn: </br> <strong>Chat GPT</strong></div>
+        </div>
+    </div>
+    <div id="waiting-room" class="slide">
+        <button class="back-to-lobby" onclick="backToLobby()" style="position: fixed;">Trở lại sảnh</button>
+        <h2>Bạn đang ở phòng <span class="roomIdDisplay"></span></h2>
+        <div id="playerList"></div>
+    </div>
+    <div id="room" class="slide">
+        <button class="back-to-lobby" onclick="backToLobby()" style="position: fixed;">Trở lại sảnh</button>
+        <h2>ID phòng: <span class="roomIdDisplay"></span></h2>
+        <h3>Lượt của: <span id="currentTurn"></span></h3>
+        <button id="rollBtn" onclick="rollDice()" disabled>Tung xúc xắc</button>
+        <div id="score-list"></div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

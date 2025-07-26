@@ -1,0 +1,6 @@
+cards =  {
+
+};
+module.exports = {
+    cards
+}
