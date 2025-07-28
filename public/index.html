@@ -54,6 +54,19 @@
         <div id="playerList"></div>
     </div>
     <div id="room" class="slide">
+        <div id="timer-box" style="
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            font-size: 24px;
+            border-radius: 10px;
+            z-index: 9999;
+        ">5</div>
+
         <button class="back-to-lobby" onclick="backToLobby()" style="position: fixed;">Trở lại sảnh</button>
         <h2>ID phòng: <span class="roomIdDisplay"></span></h2>
         <h3>Lượt của: <span id="currentTurn"></span></h3>

@@ -7,6 +7,7 @@ let roomOwner = false;
 let hasRolled = true;
 let receivedResult = false;
 let timeOut;
+let interval;
 let showingReport = false;
 //TODO: đồng bộ dữ liệu
 professionList = [];
@@ -44,23 +45,63 @@ myInfo = {
     downszized: 0
 }
 
+// chỉ tạo 1 container duy nhất
+function ensureNotiContainer() {
+    let container = document.getElementById("notification-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "notification-container";
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
+        container.style.zIndex = '9999';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '10px';
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
 function notification(message) {
+    const container = ensureNotiContainer();
+
     const noti = document.createElement('div');
     noti.innerText = message;
-    noti.style.position = 'fixed';
-    noti.style.top = '20px';
-    noti.style.left = '50%';
-    noti.style.transform = 'translateX(-50%)';
     noti.style.background = '#333';
     noti.style.color = '#fff';
     noti.style.padding = '10px 20px';
     noti.style.borderRadius = '8px';
-    noti.style.zIndex = '9999';
-    document.body.appendChild(noti);
+    noti.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    noti.style.opacity = '0.95';
+
+    container.appendChild(noti);
 
     setTimeout(() => {
         noti.remove();
+    }, 2000);
+}
+//giao dien
+function startCountdown(duration) {
+    const timerBox = document.getElementById('timer-box');
+    let timeLeft = duration;
+    timerBox.style.display = 'block';
+    timerBox.innerText = timeLeft;
+    interval = setInterval(() => {
+        timeLeft--;
+        timerBox.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            timerBox.style.display = 'none';
+        }
     }, 1000);
+}
+
+function stopCountdown() {
+    const timerBox = document.getElementById('timer-box');
+    timerBox.style.display = 'none';
+    clearInterval(interval);
 }
 
 function showAbout() {
@@ -143,6 +184,7 @@ function rollDice() {
     hasRolled = true;
     socket.emit('rollDice', currentRoomId);
     clearTimeout(timeOut);
+    stopCountdown();
 }
 
 function showBank() {
@@ -206,6 +248,42 @@ function showReport() {
     //cập nhật
     showingReport = true;
 }
+//hàm tạo confirm box: cho 2 lựa chọn trả về true hoặc false
+function confirmChoice(message, a = 'OK', b = 'Cancel') {
+    return new Promise((resolve) => {
+        const box = document.createElement('div');
+        box.style.position = 'fixed';
+        box.style.top = '50%';
+        box.style.left = '50%';
+        box.style.transform = 'translate(-50%, -50%)';
+        box.style.background = '#fff';
+        box.style.padding = '20px';
+        box.style.border = '1px solid #ccc';
+        box.style.zIndex = '10000';
+        box.innerHTML = `<p>${message}</p>`;
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.justifyContent = 'space-between';
+        const btnA = document.createElement('button');
+        btnA.innerText = a;
+        
+        btnA.onclick = () => {
+            box.remove();
+            resolve(true);
+        };
+        const btnB = document.createElement('button');
+        btnB.innerText = b;
+        btnB.onclick = () => {
+            box.remove();
+            resolve(false);
+        };
+        btnContainer.appendChild(btnA);
+        btnContainer.appendChild(btnB);
+        box.appendChild(btnContainer);
+        document.body.appendChild(box);
+    });
+}
+
 
 socket.on('connect', () => {
     myInfo.id = socket.id;
@@ -319,7 +397,7 @@ socket.on('nextTurn', ({playerId, name }) => {
                 hasRolled = true;
             }
         }, 5000);
-
+        startCountdown(5);
     }
 });
 
@@ -347,6 +425,19 @@ socket.on('cardChoice', ({ option }) => {
         choice: choice ? 0 : 1
     });
 })
+
+//máy chủ yêu cầu người chơi chọn 2 phương án
+socket.on('chooseOption', ({message, option1, option2}) => {
+    const choice = confirmChoice(message, option1, option2);
+    //log
+    console.log('User choice:', choice);
+    choice.then(result => {
+        socket.emit('optionChosen', {
+            choice: result ? option1 : option2
+        });
+    });
+});
+
 socket.on('notification', (message) => {
     notification("Máy chủ: " + message);
 });

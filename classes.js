@@ -16,6 +16,7 @@ class Player {
             retailPayment: 0,
             otherExpenses: 0,
             childExpense: 0,
+            bankLoanPayment: 0,
         };
         this.totalExpenses = 0;
         this.savings = 0;
@@ -26,6 +27,7 @@ class Player {
             carLoans: 0,
             creditCards: 0,
             retailDebt: 0,
+            bankLoans: 0,
         };
         this.children = 0;
         this.charity = 0;

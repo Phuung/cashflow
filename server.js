@@ -30,50 +30,100 @@ professions = profession_col.map((name, i) => {
     return profession_obj;
 });
 //console.log(professions);//debug;
+//lãi suất vay ngân hàng
+//nhà 0.93
+const homeInterestRate = 0.93 / 100; // 0.93%
+//học 0.5
+const schoolInterestRate = 0.5 / 100; // 0.5%
+//xe 2
+const carInterestRate = 2 / 100; // 2%
+//thẻ tín dụng 3
+const creditCardInterestRate = 3 / 100; // 3%
+//bán lẻ 5
+const retailInterestRate = 5 / 100; // 5%
+//vay ngân hàng 10
+const bankInterestRate = 10 / 100; // 10%
+
 
 const spaceType = {
-    1 : (room, player) =>{
+    1 : (io, room, player) =>{
         //paycheck
         //kiểm tra xem người chơi có đang mất việc
         //nếu không, cộng tiền cho người chơi hiện tại
         //hiện thực hàm phía dưới
+        io.to(player.id).emit('notification', 'Payday!');
     },
-    2 : (room, player) =>{
+    2 : async (io, room, player) =>{
         //opportunity
+        io.to(player.id).emit('notification', 'Opportunity');
         //người dùng được chọn big deal hoặc small deal
         //chọn ngẫu nhiên 1 lá bài thuộc big deal hoặc small deal
+        const deal = await chooseOption(io, player, "Big deal or small deal?", "Big deal", "Small deal");
+        if (deal === "Big deal") {
+            //chọn ngẫu nhiên 1 lá bài big deal
+            //thực hiện các hành động của lá bài
+
+        } else {
+            //chọn ngẫu nhiên 1 lá bài small deal
+            //thực hiện các hành động của lá bài
+            
+        }
+        
+
         
     },
-    3 : (room, player) =>{
+    3 : (io, room, player) =>{
         //market
+        io.to(player.id).emit('notification', 'Market');
         //chọn ngẫu nhiên 1 lá bài market
         
     },
-    4 : (room, player) =>{
+    4 : (io, room, player) =>{
         //doodad
+        io.to(player.id).emit('notification', 'Doodad');
         //chọn ngẫu nhiên 1 lá doodad
+        
         //nếu đủ chi phí chi trả thì trừ trực tiếp
         //nếu không, thông báo và cho người chơi 15s để vay, bán tài sản
         //nếu không đủ khả năng, phá sản, thua
     },
-    5 : (room, player) =>{
+    5 : async (io, room, player) =>{
         //charity
+        io.to(player.id).emit('notification', 'Charity');
         //người dùng có chọn từ thiện hay không
         //nếu chọn thì tăng thuộc tính từ thiện của người chơi lên 3 (không cộng dồn) và từ tiền
-
-        
+        const choice = await chooseOption(io, player, "Do you want to donate?", "Yes", "No");
+        if (choice === "Yes") {
+            player.charity = 3;
+            //check xem đủ từ thiện 10% thu nhập không
+            if (player.totalIncome * 0.1 > player.savings) {
+                //nếu không đủ thì thông báo
+                io.to(player.id).emit('notification', 'Not enough savings for charity!');
+            } else {
+                //trừ tiền tiết kiệm
+                player.savings -= player.totalIncome * 0.1;
+                reCalcCashFlow(player);
+                io.to(player.id).emit('notification', 'You donated 10% of your income!');
+            }
+        } else {
+            //nếu không chọn thì không làm gì cả
+            io.to(player.id).emit('notification', 'You chose not to donate.');
+        }
     },
-    6 : (room, player) =>{
+    6 : (io, room, player) =>{
         //baby
+        io.to(player.id).emit('notification', 'Baby');
         //tăng số con của người chơi lên 1 (tối đa 3) và cập nhật chi phí nuôi con
         player.children += 1;
         if (player.children > 3) player.children = 3;
         console.log('baby');
         reCalcExpenses(player);
     },
-    7 : (room, player) =>{
+    7 : (io, room, player) =>{
         //downsized
+        io.to(player.id).emit('notification', 'You have been downsized!');
         //thay đổi thuộc tính mất việc của người chơi thành 2
+        //payday sẽ không cộng tiền lương
         player.downsized = 2;
     }
 };
@@ -91,6 +141,13 @@ function reCalcIncome(player) {
 function reCalcExpenses(player) {
     //chi phí nuôi 1 đứa trẻ cố định là 200
     player.expenses.childExpense = player.children * 200;
+    //trả lãi các khoản nợ
+    player.expenses.homeMortgagePayment = player.liabilities.homeMortgage * homeInterestRate;
+    player.expenses.schoolLoanPayment = player.liabilities.schoolsLoans * schoolInterestRate;
+    player.expenses.carLoanPayment = player.liabilities.carLoans * carInterestRate;
+    player.expenses.creditCardPayment = player.liabilities.creditCards * creditCardInterestRate;
+    player.expenses.retailPayment = player.liabilities.retailDebt * retailInterestRate;
+    //tính tổng chi phí
     player.totalExpenses = Object.values(player.expenses).reduce((acc, val) => acc + val, 0);
 }
 
@@ -98,6 +155,33 @@ function reCalcCashFlow(player) {
     reCalcIncome(player);
     reCalcExpenses(player);
 }
+
+//hàm cho người chơi chọn 2 phương án
+function chooseOption(io, player, message, option1, option2) {
+    //hiện thông báo cho người chơi chọn 1 trong 2 phương án
+    //nếu chọn phương án 1 thì thực hiện phương án 1
+    //nếu chọn phương án 2 thì thực hiện phương án 2
+    //cập nhật lại tiền của người chơi
+    //log
+    console.log(`Player ${player.name} is choosing between: ${option1} or ${option2}`);
+    io.to(player.id).emit('chooseOption', {
+        message: message,
+        option1: option1,
+        option2: option2
+    });
+    return new Promise((resolve, reject) => {
+        io.once('optionChosen', (choice) => {
+            if (choice) {
+                resolve(option1);
+            } else {
+                resolve(option2);
+            }
+        });
+    });
+
+}
+
+
 //run
 io.on('connection', socket => {
     console.log(`Socket ket noi: ${socket.id}`);
@@ -113,7 +197,6 @@ io.on('connection', socket => {
             players: [player],
             started: false,
             turn: 0,
-            waitingChoice: null,
             currentCard: null,
             roomId: roomId,
             rollTimeout: null
@@ -218,7 +301,7 @@ io.on('connection', socket => {
             console.log('khong tim thay nguoi choi');
             return;
         }
-        if (socket.id !== currentPlayer.id || room.waitingChoice) {
+        if (socket.id !== currentPlayer.id) {
             console.log('khong phai luot cua ban');
             return;
         }
@@ -245,7 +328,7 @@ io.on('connection', socket => {
             }
         }
 
-        spaceType[ratRace[currentPlayer.pos]](room, currentPlayer);
+        spaceType[ratRace[currentPlayer.pos]](io, room, currentPlayer);
         io.to(roomId).emit('diceResult', {
             playerId: currentPlayer.id,
             name: currentPlayer.name,
@@ -256,6 +339,8 @@ io.on('connection', socket => {
     });
 
     socket.on('nextTurn', roomId => {
+        //log
+        
         const room = rooms[roomId];
         if (!room) {
             console.log('Khong tim thay phong');
@@ -264,7 +349,7 @@ io.on('connection', socket => {
         console.log('pass');
         nextTurn(room);
     });
-    //TODO: vay ngân hàng, nếu vay âm là gửi
+    //vay ngân hàng, nếu vay âm là gửi
     socket.on('bankAction', (playerId, roomId, value) => {
         //kiểm tra khả năng vay
         const room = rooms[roomId];
@@ -310,6 +395,7 @@ io.on('connection', socket => {
     }
 
     function nextTurn(room) {
+        console.log('nextTurn called');
         room.turn = (room.turn + 1) % room.players.length;
         emitNextTurn(room);
     }
@@ -332,6 +418,10 @@ io.on('connection', socket => {
             return;
         }
         room.rollTimeout = setTimeout(() => {
+            if (!room.started) {
+                console.log('Game chưa bắt đầu, không thể tiếp tục.');
+                return;
+            }
             nextTurn(room);
         }, 5000);
     }
@@ -350,9 +440,34 @@ io.on('connection', socket => {
     }
 
     function payday(player) {
-        player.savings += (player.totalIncome - player.totalExpenses);
-        //TODO: nếu không đủ, cho người chơi 15s quay xở
+        socket.emit('notification', 'payday!');
+        let paymoney = player.totalIncome - player.totalExpenses;
+        if (player.downsized) {
+            paymoney -= player.salary;
+            //mà không đi thì sao trúng pay day được nhỉ
+        }
+        if (paymoney < 0) {
+            //nếu nhận âm thì xem có đủ tiền tiết kiệm không
+            if (player.savings < Math.abs(paymoney)) {
+                //cho người chơi 15s để vay, bán tài sản
+                prepareMoney(player, Math.abs(paymoney) - player.savings);
+            }
+        }
+        player.savings += paymoney;
+        reCalcCashFlow(player);
     }
+
+    //hàm cho người chơi thời gian chuẩn bị tiền
+    function prepareMoney(player, mount) {
+        socket.emit('notification', `Bạn có 20 giây để chuẩn bị ${mount} tiền!`);
+        player.prepareMoneyTime = setTimeout(() => {
+            if (player.savings < mount) {
+                //phá sản
+                socket.emit('notification', 'Bạn đã phá sản vì không đủ tiền!');
+            }
+        }, 20000);
+    }
+    //hàm phá sản
 });
 
 server.listen(3000, () => {
