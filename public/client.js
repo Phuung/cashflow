@@ -283,6 +283,54 @@ function confirmChoice(message, a = 'OK', b = 'Cancel') {
         document.body.appendChild(box);
     });
 }
+//hàm cho người chơi nhập số tiền
+function promptInput(message, confirmText = 'Nhập', cancelText = 'Bỏ') {
+    return new Promise((resolve) => {
+        const box = document.createElement('div');
+        box.style.position = 'fixed';
+        box.style.top = '50%';
+        box.style.left = '50%';
+        box.style.transform = 'translate(-50%, -50%)';
+        box.style.background = '#fff';
+        box.style.padding = '20px';
+        box.style.border = '1px solid #ccc';
+        box.style.zIndex = '10000';
+        box.innerHTML = `<p>${message}</p>`;
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.style.width = '100%';
+        input.style.marginBottom = '10px';
+        box.appendChild(input);
+
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.justifyContent = 'space-between';
+
+        const btnConfirm = document.createElement('button');
+        btnConfirm.innerText = confirmText;
+        btnConfirm.onclick = () => {
+            const value = parseFloat(input.value);
+            box.remove();
+            resolve(isNaN(value) ? 0 : value);
+        };
+
+        const btnCancel = document.createElement('button');
+        btnCancel.innerText = cancelText;
+        btnCancel.onclick = () => {
+            box.remove();
+            resolve(0);
+        };
+
+        btnContainer.appendChild(btnConfirm);
+        btnContainer.appendChild(btnCancel);
+        box.appendChild(btnContainer);
+        document.body.appendChild(box);
+
+        input.focus();
+    });
+}
+
 
 
 socket.on('connect', () => {
@@ -434,6 +482,16 @@ socket.on('chooseOption', ({message, option1, option2}) => {
     choice.then(result => {
         socket.emit('optionChosen', {
             choice: result ? option1 : option2
+        });
+    });
+});
+
+//máy chủ yêu cầu nhập số tiền
+socket.on('chooseAmount', ({ message }) => {
+    const amount = promptInput(message, 'Nhập', 'Bỏ qua');
+    amount.then(value => {
+        socket.emit('amountChosen', {
+            amount: value
         });
     });
 });

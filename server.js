@@ -44,7 +44,6 @@ const retailInterestRate = 5 / 100; // 5%
 //vay ngân hàng 10
 const bankInterestRate = 10 / 100; // 10%
 
-
 const spaceType = {
     1 : (io, room, player) =>{
         //paycheck
@@ -62,26 +61,27 @@ const spaceType = {
         if (deal === "Big deal") {
             //chọn ngẫu nhiên 1 lá bài big deal
             //thực hiện các hành động của lá bài
+            const card = cards.bigDeals[Math.floor(Math.random() * cards.bigDeals.length)];
 
         } else {
             //chọn ngẫu nhiên 1 lá bài small deal
             //thực hiện các hành động của lá bài
+            const card = cards.smallDeals[Math.floor(Math.random() * cards.smallDeals.length)];
             
-        }
-        
-
-        
+        }   
     },
     3 : (io, room, player) =>{
         //market
         io.to(player.id).emit('notification', 'Market');
         //chọn ngẫu nhiên 1 lá bài market
+        const card = cards.market[Math.floor(Math.random() * cards.market.length)];
         
     },
     4 : (io, room, player) =>{
         //doodad
         io.to(player.id).emit('notification', 'Doodad');
         //chọn ngẫu nhiên 1 lá doodad
+        const card = cards.doodads[Math.floor(Math.random() * cards.doodads.length)];
         
         //nếu đủ chi phí chi trả thì trừ trực tiếp
         //nếu không, thông báo và cho người chơi 15s để vay, bán tài sản
@@ -179,6 +179,26 @@ function chooseOption(io, player, message, option1, option2) {
         });
     });
 
+}
+
+//hàm cho người chơi nhập số tiền
+function chooseAmount(io, player, message) {
+    //hiện thông báo cho người chơi nhập số tiền
+    //cập nhật lại tiền của người chơi
+    //log
+    console.log(`Player ${player.name} is choosing an amount.`);
+    io.to(player.id).emit('chooseAmount', {
+        message: message
+    });
+    return new Promise((resolve, reject) => {
+        io.once('amountChosen', (amount) => {
+            if (amount) {
+                resolve(amount);
+            } else {
+                reject('No amount chosen');
+            }
+        });
+    });
 }
 
 
