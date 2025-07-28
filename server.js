@@ -62,6 +62,7 @@ const spaceType = {
             //chọn ngẫu nhiên 1 lá bài big deal
             //thực hiện các hành động của lá bài
             const card = cards.bigDeals[Math.floor(Math.random() * cards.bigDeals.length)];
+            
 
         } else {
             //chọn ngẫu nhiên 1 lá bài small deal

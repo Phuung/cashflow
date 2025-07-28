@@ -3,30 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <title>Demo</title>
-    <style>
-        * { margin-top: 20px; }
-        body { font-family: sans-serif; padding: 20px; }
-        .slide { display: none; }
-        /* #nameInput { display: block; } */
-        #room { display: block; }
-        #about {
-            position: fixed;
-            width: 80vw;
-            height: 80vh;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: darkkhaki;
-            display: none;
-            text-align: center;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Cash Flow demo</h1>
-
     <div id="nameInput" class="slide">
-        <input type="text" id="playerName" placeholder="Nhập tên của bạn" />
+        <input type="text" id="playerName" placeholder="Thưa ngài, xin cho tôi biết quý danh của ngài." />
         <button onclick="setName()">Vào sảnh</button>
     </div>
 
@@ -52,7 +34,19 @@
     <div id="waiting-room" class="slide">
         <button class="back-to-lobby" onclick="backToLobby()" style="position: fixed;">Trở lại sảnh</button>
         <h2>Bạn đang ở phòng <span class="roomIdDisplay"></span></h2>
-        <div id="playerList"></div>
+        <div id="playerList">
+            <h3>Danh sách người chơi:</h3>
+            <ul id="players">
+                <!-- Danh sách người chơi sẽ được cập nhật ở đây -->
+                <!-- mẫu -->
+                <li><strong>ten nguoi choi hiện tại</strong> - <select>
+                    <option value="profession">Chọn nghề</option>
+                    <option value="engineer">Kỹ sư</option>
+                    <option value="doctor">Bác sĩ</option>
+                </select></li>
+                <li><strong>ten nguoi choi</strong> - nghề</li>
+            </ul>
+        </div>
     </div>
     <div id="room" class="slide">
         <div id="timer-box" style="
